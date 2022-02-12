@@ -311,164 +311,163 @@ __webpack_require__(11).polyfill();
  * @constructor
  */
 var Toasted = function Toasted(_options) {
-	var _this = this;
+  var _this = this;
 
-	/**
-  * Unique id of the toast
-  */
-	this.id = uuid.generate();
+  /**
+   * Unique id of the toast
+   */
+  this.id = uuid.generate();
 
-	/**
-  * Shared Options of the Toast
-  */
-	this.options = _options;
+  /**
+   * Shared Options of the Toast
+   */
+  this.options = _options;
 
-	/**
-  * Cached Options of the Toast
-  */
-	this.cached_options = {};
+  /**
+   * Cached Options of the Toast
+   */
+  this.cached_options = {};
 
-	/**
-  * Shared Toasts list
-  */
-	this.global = {};
+  /**
+   * Shared Toasts list
+   */
+  this.global = {};
 
-	/**
-  * All Registered Groups
-  */
-	this.groups = [];
+  /**
+   * All Registered Groups
+   */
+  this.groups = [];
 
-	/**
-  * All Registered Toasts
-  */
-	this.toasts = [];
+  /**
+   * All Registered Toasts
+   */
+  this.toasts = [];
 
-	/**
-  * Element of the Toast Container
-  */
-	this.container = null;
+  /**
+   * Element of the Toast Container
+   */
+  this.container = null;
 
-	/**
-  * Initiate toast container
-  */
-	initiateToastContainer(this);
+  /**
+   * Initiate toast container
+   */
+  initiateToastContainer(this);
 
-	/**
-  * Initiate custom toasts
-  */
-	initiateCustomToasts(this);
+  /**
+   * Initiate custom toasts
+   */
+  initiateCustomToasts(this);
 
-	/**
-  * Create New Group of Toasts
-  *
-  * @param o
-  */
-	this.group = function (o) {
+  /**
+   * Create New Group of Toasts
+   *
+   * @param o
+   */
+  this.group = function (o) {
+    if (!o) o = {};
 
-		if (!o) o = {};
+    if (!o.globalToasts) {
+      o.globalToasts = {};
+    }
 
-		if (!o.globalToasts) {
-			o.globalToasts = {};
-		}
+    // share parents global toasts
+    Object.assign(o.globalToasts, _this.global);
 
-		// share parents global toasts
-		Object.assign(o.globalToasts, _this.global);
+    // tell parent about the group
+    var group = new Toasted(o);
+    _this.groups.push(group);
 
-		// tell parent about the group
-		var group = new Toasted(o);
-		_this.groups.push(group);
+    return group;
+  };
 
-		return group;
-	};
+  /**
+   * Register a Global Toast
+   *
+   * @param name
+   * @param payload
+   * @param options
+   */
+  this.register = function (name, payload, options) {
+    options = options || {};
+    return register(_this, name, payload, options);
+  };
 
-	/**
-  * Register a Global Toast
-  *
-  * @param name
-  * @param payload
-  * @param options
-  */
-	this.register = function (name, payload, options) {
-		options = options || {};
-		return register(_this, name, payload, options);
-	};
+  /**
+   * Show a Simple Toast
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.show = function (message, options) {
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Simple Toast
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.show = function (message, options) {
-		return _show(_this, message, options);
-	};
+  /**
+   * Show a Toast with Success Style
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.success = function (message, options) {
+    options = options || {};
+    options.type = "success";
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Toast with Success Style
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.success = function (message, options) {
-		options = options || {};
-		options.type = "success";
-		return _show(_this, message, options);
-	};
+  /**
+   * Show a Toast with Info Style
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.info = function (message, options) {
+    options = options || {};
+    options.type = "info";
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Toast with Info Style
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.info = function (message, options) {
-		options = options || {};
-		options.type = "info";
-		return _show(_this, message, options);
-	};
+  /**
+   * Show a Toast with Error Style
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.error = function (message, options) {
+    options = options || {};
+    options.type = "error";
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Toast with Error Style
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.error = function (message, options) {
-		options = options || {};
-		options.type = "error";
-		return _show(_this, message, options);
-	};
+  /**
+   * Remove a Toast
+   * @param el
+   */
+  this.remove = function (el) {
+    _this.toasts = _this.toasts.filter(function (t) {
+      return t.el.hash !== el.hash;
+    });
+    if (el.parentNode) el.parentNode.removeChild(el);
+  };
 
-	/**
-  * Remove a Toast
-  * @param el
-  */
-	this.remove = function (el) {
-		_this.toasts = _this.toasts.filter(function (t) {
-			return t.el.hash !== el.hash;
-		});
-		if (el.parentNode) el.parentNode.removeChild(el);
-	};
+  /**
+   * Clear All Toasts
+   *
+   * @returns {boolean}
+   */
+  this.clear = function (onClear) {
+    __WEBPACK_IMPORTED_MODULE_1__animations__["a" /* default */].clearAnimation(_this.toasts, function () {
+      onClear && onClear();
+    });
+    _this.toasts = [];
 
-	/**
-  * Clear All Toasts
-  *
-  * @returns {boolean}
-  */
-	this.clear = function (onClear) {
-		__WEBPACK_IMPORTED_MODULE_1__animations__["a" /* default */].clearAnimation(_this.toasts, function () {
-			onClear && onClear();
-		});
-		_this.toasts = [];
+    return true;
+  };
 
-		return true;
-	};
-
-	return this;
+  return this;
 };
 
 /**
@@ -481,103 +480,96 @@ var Toasted = function Toasted(_options) {
  * @private
  */
 var _show = function _show(instance, message, options) {
-	options = options || {};
-	var toast = null;
+  options = options || {};
+  var toast = null;
 
-	if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) !== "object") {
-		console.error("Options should be a type of object. given : " + options);
-		return null;
-	}
+  if ((typeof options === "undefined" ? "undefined" : _typeof(options)) !== "object") {
+    console.error("Options should be a type of object. given : " + options);
+    return null;
+  }
 
-	// singleton feature
-	if (instance.options.singleton && instance.toasts.length > 0) {
-		instance.cached_options = options;
-		instance.toasts[instance.toasts.length - 1].goAway(0);
-	}
+  // singleton feature
+  if (instance.options.singleton && instance.toasts.length > 0) {
+    instance.cached_options = options;
+    instance.toasts[instance.toasts.length - 1].goAway(0);
+  }
 
-	// clone the global options
-	var _options = Object.assign({}, instance.options);
+  // clone the global options
+  var _options = Object.assign({}, instance.options);
 
-	// merge the cached global options with options
-	Object.assign(_options, options);
+  // merge the cached global options with options
+  Object.assign(_options, options);
 
-	toast = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__show__["a" /* default */])(instance, message, _options);
-	instance.toasts.push(toast);
+  toast = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__show__["a" /* default */])(instance, message, _options);
+  instance.toasts.push(toast);
 
-	return toast;
+  return toast;
 };
 
 /**
  * Register the Custom Toasts
  */
 var initiateCustomToasts = function initiateCustomToasts(instance) {
+  var customToasts = instance.options.globalToasts;
 
-	var customToasts = instance.options.globalToasts;
+  // this will initiate toast for the custom toast.
+  var initiate = function initiate(message, options) {
+    // check if passed option is a available method if so call it.
+    if (typeof options === "string" && instance[options]) {
+      return instance[options].apply(instance, [message, {}]);
+    }
 
-	// this will initiate toast for the custom toast.
-	var initiate = function initiate(message, options) {
+    // or else create a new toast with passed options.
+    return _show(instance, message, options);
+  };
 
-		// check if passed option is a available method if so call it.
-		if (typeof options === 'string' && instance[options]) {
-			return instance[options].apply(instance, [message, {}]);
-		}
+  if (customToasts) {
+    instance.global = {};
 
-		// or else create a new toast with passed options.
-		return _show(instance, message, options);
-	};
+    Object.keys(customToasts).forEach(function (key) {
+      // register the custom toast events to the Toast.custom property
+      instance.global[key] = function () {
+        var payload = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-	if (customToasts) {
-
-		instance.global = {};
-
-		Object.keys(customToasts).forEach(function (key) {
-
-			// register the custom toast events to the Toast.custom property
-			instance.global[key] = function () {
-				var payload = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-
-				//console.log(payload);
-				// return the it in order to expose the Toast methods
-				return customToasts[key].apply(null, [payload, initiate]);
-			};
-		});
-	}
+        //console.log(payload);
+        // return the it in order to expose the Toast methods
+        return customToasts[key].apply(null, [payload, initiate]);
+      };
+    });
+  }
 };
 
 var initiateToastContainer = function initiateToastContainer(instance) {
-	// create notification container
-	var container = document.createElement('div');
-	container.id = instance.id;
-	container.setAttribute('role', 'status');
-	container.setAttribute('aria-live', 'polite');
-	container.setAttribute('aria-atomic', 'false');
+  // create notification container
+  var container = document.createElement("div");
+  container.id = instance.id;
+  container.setAttribute("role", "status");
+  container.setAttribute("aria-live", "polite");
+  container.setAttribute("aria-atomic", "false");
 
-	document.body.appendChild(container);
-	instance.container = container;
+  document.body.appendChild(container);
+  instance.container = container;
 };
 
 var register = function register(instance, name, callback, options) {
+  !instance.options.globalToasts ? instance.options.globalToasts = {} : null;
 
-	!instance.options.globalToasts ? instance.options.globalToasts = {} : null;
+  instance.options.globalToasts[name] = function (payload, initiate) {
+    // if call back is string we will keep it that way..
+    var message = null;
 
-	instance.options.globalToasts[name] = function (payload, initiate) {
+    if (typeof callback === "string") {
+      message = callback;
+    }
 
-		// if call back is string we will keep it that way..
-		var message = null;
+    if (typeof callback === "function") {
+      message = callback(payload);
+    }
 
-		if (typeof callback === 'string') {
-			message = callback;
-		}
+    return initiate(message, options);
+  };
 
-		if (typeof callback === 'function') {
-			message = callback(payload);
-		}
-
-		return initiate(message, options);
-	};
-
-	initiateCustomToasts(instance);
+  initiateCustomToasts(instance);
 };
 
 /* unused harmony default export */ var _unused_webpack_default_export = ({ Toasted: Toasted });
@@ -1261,7 +1253,7 @@ exports = module.exports = __webpack_require__(10)();
 
 
 // module
-exports.push([module.i, ".toasted{padding:0 20px}.toasted.rounded{border-radius:24px}.toasted .primary,.toasted.toasted-primary{border-radius:2px;min-height:38px;line-height:1.1em;background-color:#353535;padding:6px 20px;font-size:15px;font-weight:300;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24)}.toasted .primary.success,.toasted.toasted-primary.success{background:#4caf50}.toasted .primary.error,.toasted.toasted-primary.error{background:#f44336}.toasted .primary.info,.toasted.toasted-primary.info{background:#3f51b5}.toasted .primary .action,.toasted.toasted-primary .action{color:#a1c2fa}.toasted.bubble{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#ff7043;padding:0 20px;font-size:15px;font-weight:300;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24)}.toasted.bubble.success{background:#4caf50}.toasted.bubble.error{background:#f44336}.toasted.bubble.info{background:#3f51b5}.toasted.bubble .action{color:#8e2b0c}.toasted.outline{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#fff;border:1px solid #676767;padding:0 20px;font-size:15px;color:#676767;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.24);font-weight:700}.toasted.outline.success{color:#4caf50;border-color:#4caf50}.toasted.outline.error{color:#f44336;border-color:#f44336}.toasted.outline.info{color:#3f51b5;border-color:#3f51b5}.toasted.outline .action{color:#607d8b}.toasted-container{position:fixed;z-index:10000}.toasted-container,.toasted-container.full-width{display:-ms-flexbox;display:flex;-ms-flex-direction:column;flex-direction:column}.toasted-container.full-width{max-width:86%;width:100%}.toasted-container.full-width.fit-to-screen{min-width:100%}.toasted-container.full-width.fit-to-screen .toasted:first-child{margin-top:0}.toasted-container.full-width.fit-to-screen.top-right{top:0;right:0}.toasted-container.full-width.fit-to-screen.top-left{top:0;left:0}.toasted-container.full-width.fit-to-screen.top-center{top:0;left:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.full-width.fit-to-screen.bottom-right{right:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-left{left:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-center{left:0;bottom:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.top-right{top:10%;right:7%}.toasted-container.top-left{top:10%;left:7%}.toasted-container.top-center{top:10%;left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%)}.toasted-container.bottom-right{right:5%;bottom:7%}.toasted-container.bottom-left{left:5%;bottom:7%}.toasted-container.bottom-center{left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%);bottom:7%}.toasted-container.bottom-left .toasted,.toasted-container.top-left .toasted{float:left}.toasted-container.bottom-right .toasted,.toasted-container.top-right .toasted{float:right}.toasted-container .toasted{top:35px;width:auto;clear:both;margin-top:10px;position:relative;max-width:100%;height:auto;word-break:normal;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:justify;justify-content:space-between;box-sizing:inherit}.toasted-container .toasted .fa,.toasted-container .toasted .fab,.toasted-container .toasted .far,.toasted-container .toasted .fas,.toasted-container .toasted .material-icons,.toasted-container .toasted .mdi{margin-right:.5rem;margin-left:-.4rem}.toasted-container .toasted .fa.after,.toasted-container .toasted .fab.after,.toasted-container .toasted .far.after,.toasted-container .toasted .fas.after,.toasted-container .toasted .material-icons.after,.toasted-container .toasted .mdi.after{margin-left:.5rem;margin-right:-.4rem}.toasted-container .toasted .action{text-decoration:none;font-size:.8rem;padding:8px;margin:5px -7px 5px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.03em;font-weight:600;cursor:pointer}.toasted-container .toasted button.action{background:none;color:inherit;border:none;font:inherit;line-height:normal}.toasted-container .toasted .action.icon{padding:4px;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:center;justify-content:center}.toasted-container .toasted .action.icon .fa,.toasted-container .toasted .action.icon .material-icons,.toasted-container .toasted .action.icon .mdi{margin-right:0;margin-left:4px}.toasted-container .toasted .action.icon:hover{text-decoration:none}.toasted-container .toasted .action:hover{text-decoration:underline}@media only screen and (max-width:600px){.toasted-container{min-width:100%}.toasted-container .toasted:first-child{margin-top:0}.toasted-container.top-right{top:0;right:0}.toasted-container.top-left{top:0;left:0}.toasted-container.top-center{top:0;left:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.bottom-right{right:0;bottom:0}.toasted-container.bottom-left{left:0;bottom:0}.toasted-container.bottom-center{left:0;bottom:0;-webkit-transform:translateX(0);transform:translateX(0)}.toasted-container.bottom-center,.toasted-container.top-center{-ms-flex-align:stretch!important;align-items:stretch!important}.toasted-container.bottom-left .toasted,.toasted-container.bottom-right .toasted,.toasted-container.top-left .toasted,.toasted-container.top-right .toasted{float:none}.toasted-container .toasted{border-radius:0}}", ""]);
+exports.push([module.i, ".toasted{padding:0 20px}.toasted.rounded{border-radius:24px}.toasted .primary,.toasted.toasted-primary{border-radius:8px;min-height:38px;line-height:1.1em;background-color:#353535;padding:6px 20px;font-size:15px;font-weight:700;color:#fff}.toasted .primary.success,.toasted.toasted-primary.success{background:#4caf50}.toasted .primary.error,.toasted.toasted-primary.error{background:#f44336}.toasted .primary.info,.toasted.toasted-primary.info{background:#3f51b5}.toasted .primary .action,.toasted.toasted-primary .action{color:#a1c2fa}.toasted .primary .flat,.toasted.toasted-primary .flat{box-shadow:none}.toasted.bubble{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#ff7043;padding:0 20px;font-size:15px;font-weight:700;color:#fff}.toasted.bubble.success{background:#4caf50}.toasted.bubble.error{background:#f44336}.toasted.bubble.info{background:#3f51b5}.toasted.bubble .action{color:#8e2b0c}.toasted.outline{border-radius:30px;min-height:38px;line-height:1.1em;background-color:#fff;border:1px solid #676767;padding:0 20px;font-size:15px;color:#676767;font-weight:700}.toasted.outline.success{color:#4caf50;border-color:#4caf50}.toasted.outline.error{color:#f44336;border-color:#f44336}.toasted.outline.info{color:#3f51b5;border-color:#3f51b5}.toasted.outline .action{color:#607d8b}.toasted-container{position:fixed;z-index:10000}.toasted-container,.toasted-container.full-width{display:-ms-flexbox;display:flex;-ms-flex-direction:column;flex-direction:column}.toasted-container.full-width{max-width:86%;width:100%}.toasted-container.full-width.fit-to-screen{min-width:100%}.toasted-container.full-width.fit-to-screen .toasted:first-child{margin-top:0}.toasted-container.full-width.fit-to-screen.top-right{top:0;right:0}.toasted-container.full-width.fit-to-screen.top-left{top:0;left:0}.toasted-container.full-width.fit-to-screen.top-center{top:0;left:0;transform:translateX(0)}.toasted-container.full-width.fit-to-screen.bottom-right{right:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-left{left:0;bottom:0}.toasted-container.full-width.fit-to-screen.bottom-center{left:0;bottom:0;transform:translateX(0)}.toasted-container.top-right{top:10%;right:7%}.toasted-container.top-left{top:10%;left:7%}.toasted-container.top-center{top:10%;left:50%;transform:translateX(-50%)}.toasted-container.bottom-right{right:5%;bottom:7%}.toasted-container.bottom-left{left:5%;bottom:7%}.toasted-container.bottom-center{left:50%;transform:translateX(-50%);bottom:7%}.toasted-container.bottom-left .toasted,.toasted-container.top-left .toasted{float:left}.toasted-container.bottom-right .toasted,.toasted-container.top-right .toasted{float:right}.toasted-container .toasted{top:35px;width:auto;clear:both;margin-top:10px;position:relative;max-width:100%;height:auto;word-break:normal;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:justify;justify-content:space-between;box-sizing:inherit}.toasted-container .toasted .fa,.toasted-container .toasted .fab,.toasted-container .toasted .far,.toasted-container .toasted .fas,.toasted-container .toasted .material-icons,.toasted-container .toasted .mdi{margin-right:.5rem;margin-left:-.4rem}.toasted-container .toasted .fa.after,.toasted-container .toasted .fab.after,.toasted-container .toasted .far.after,.toasted-container .toasted .fas.after,.toasted-container .toasted .material-icons.after,.toasted-container .toasted .mdi.after{margin-left:.5rem;margin-right:-.4rem}.toasted-container .toasted .action{text-decoration:none;font-size:.8rem;padding:8px;margin:5px -7px 5px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.03em;font-weight:600;cursor:pointer}.toasted-container .toasted button.action{background:none;color:inherit;border:none;font:inherit;line-height:normal}.toasted-container .toasted .action.icon{padding:4px;display:-ms-flexbox;display:flex;-ms-flex-align:center;align-items:center;-ms-flex-pack:center;justify-content:center}.toasted-container .toasted .action.icon .fa,.toasted-container .toasted .action.icon .material-icons,.toasted-container .toasted .action.icon .mdi{margin-right:0;margin-left:4px}.toasted-container .toasted .action.icon:hover{text-decoration:none}.toasted-container .toasted .action:hover{text-decoration:underline}@media only screen and (max-width:600px){.toasted-container{min-width:100%}.toasted-container .toasted:first-child{margin-top:0}.toasted-container.top-right{top:0;right:0}.toasted-container.top-left{top:0;left:0}.toasted-container.top-center{top:0;left:0;transform:translateX(0)}.toasted-container.bottom-right{right:0;bottom:0}.toasted-container.bottom-left{left:0;bottom:0}.toasted-container.bottom-center{left:0;bottom:0;transform:translateX(0)}.toasted-container.bottom-center,.toasted-container.top-center{-ms-flex-align:stretch!important;align-items:stretch!important}.toasted-container.bottom-left .toasted,.toasted-container.bottom-right .toasted,.toasted-container.top-left .toasted,.toasted-container.top-right .toasted{float:none}.toasted-container .toasted{border-radius:0}}", ""]);
 
 // exports
 

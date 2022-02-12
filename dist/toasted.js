@@ -311,164 +311,163 @@ __webpack_require__(8).polyfill();
  * @constructor
  */
 var Toasted = function Toasted(_options) {
-	var _this = this;
+  var _this = this;
 
-	/**
-  * Unique id of the toast
-  */
-	this.id = uuid.generate();
+  /**
+   * Unique id of the toast
+   */
+  this.id = uuid.generate();
 
-	/**
-  * Shared Options of the Toast
-  */
-	this.options = _options;
+  /**
+   * Shared Options of the Toast
+   */
+  this.options = _options;
 
-	/**
-  * Cached Options of the Toast
-  */
-	this.cached_options = {};
+  /**
+   * Cached Options of the Toast
+   */
+  this.cached_options = {};
 
-	/**
-  * Shared Toasts list
-  */
-	this.global = {};
+  /**
+   * Shared Toasts list
+   */
+  this.global = {};
 
-	/**
-  * All Registered Groups
-  */
-	this.groups = [];
+  /**
+   * All Registered Groups
+   */
+  this.groups = [];
 
-	/**
-  * All Registered Toasts
-  */
-	this.toasts = [];
+  /**
+   * All Registered Toasts
+   */
+  this.toasts = [];
 
-	/**
-  * Element of the Toast Container
-  */
-	this.container = null;
+  /**
+   * Element of the Toast Container
+   */
+  this.container = null;
 
-	/**
-  * Initiate toast container
-  */
-	initiateToastContainer(this);
+  /**
+   * Initiate toast container
+   */
+  initiateToastContainer(this);
 
-	/**
-  * Initiate custom toasts
-  */
-	initiateCustomToasts(this);
+  /**
+   * Initiate custom toasts
+   */
+  initiateCustomToasts(this);
 
-	/**
-  * Create New Group of Toasts
-  *
-  * @param o
-  */
-	this.group = function (o) {
+  /**
+   * Create New Group of Toasts
+   *
+   * @param o
+   */
+  this.group = function (o) {
+    if (!o) o = {};
 
-		if (!o) o = {};
+    if (!o.globalToasts) {
+      o.globalToasts = {};
+    }
 
-		if (!o.globalToasts) {
-			o.globalToasts = {};
-		}
+    // share parents global toasts
+    Object.assign(o.globalToasts, _this.global);
 
-		// share parents global toasts
-		Object.assign(o.globalToasts, _this.global);
+    // tell parent about the group
+    var group = new Toasted(o);
+    _this.groups.push(group);
 
-		// tell parent about the group
-		var group = new Toasted(o);
-		_this.groups.push(group);
+    return group;
+  };
 
-		return group;
-	};
+  /**
+   * Register a Global Toast
+   *
+   * @param name
+   * @param payload
+   * @param options
+   */
+  this.register = function (name, payload, options) {
+    options = options || {};
+    return register(_this, name, payload, options);
+  };
 
-	/**
-  * Register a Global Toast
-  *
-  * @param name
-  * @param payload
-  * @param options
-  */
-	this.register = function (name, payload, options) {
-		options = options || {};
-		return register(_this, name, payload, options);
-	};
+  /**
+   * Show a Simple Toast
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.show = function (message, options) {
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Simple Toast
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.show = function (message, options) {
-		return _show(_this, message, options);
-	};
+  /**
+   * Show a Toast with Success Style
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.success = function (message, options) {
+    options = options || {};
+    options.type = "success";
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Toast with Success Style
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.success = function (message, options) {
-		options = options || {};
-		options.type = "success";
-		return _show(_this, message, options);
-	};
+  /**
+   * Show a Toast with Info Style
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.info = function (message, options) {
+    options = options || {};
+    options.type = "info";
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Toast with Info Style
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.info = function (message, options) {
-		options = options || {};
-		options.type = "info";
-		return _show(_this, message, options);
-	};
+  /**
+   * Show a Toast with Error Style
+   *
+   * @param message
+   * @param options
+   * @returns {*}
+   */
+  this.error = function (message, options) {
+    options = options || {};
+    options.type = "error";
+    return _show(_this, message, options);
+  };
 
-	/**
-  * Show a Toast with Error Style
-  *
-  * @param message
-  * @param options
-  * @returns {*}
-  */
-	this.error = function (message, options) {
-		options = options || {};
-		options.type = "error";
-		return _show(_this, message, options);
-	};
+  /**
+   * Remove a Toast
+   * @param el
+   */
+  this.remove = function (el) {
+    _this.toasts = _this.toasts.filter(function (t) {
+      return t.el.hash !== el.hash;
+    });
+    if (el.parentNode) el.parentNode.removeChild(el);
+  };
 
-	/**
-  * Remove a Toast
-  * @param el
-  */
-	this.remove = function (el) {
-		_this.toasts = _this.toasts.filter(function (t) {
-			return t.el.hash !== el.hash;
-		});
-		if (el.parentNode) el.parentNode.removeChild(el);
-	};
+  /**
+   * Clear All Toasts
+   *
+   * @returns {boolean}
+   */
+  this.clear = function (onClear) {
+    __WEBPACK_IMPORTED_MODULE_1__animations__["a" /* default */].clearAnimation(_this.toasts, function () {
+      onClear && onClear();
+    });
+    _this.toasts = [];
 
-	/**
-  * Clear All Toasts
-  *
-  * @returns {boolean}
-  */
-	this.clear = function (onClear) {
-		__WEBPACK_IMPORTED_MODULE_1__animations__["a" /* default */].clearAnimation(_this.toasts, function () {
-			onClear && onClear();
-		});
-		_this.toasts = [];
+    return true;
+  };
 
-		return true;
-	};
-
-	return this;
+  return this;
 };
 
 /**
@@ -481,103 +480,96 @@ var Toasted = function Toasted(_options) {
  * @private
  */
 var _show = function _show(instance, message, options) {
-	options = options || {};
-	var toast = null;
+  options = options || {};
+  var toast = null;
 
-	if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) !== "object") {
-		console.error("Options should be a type of object. given : " + options);
-		return null;
-	}
+  if ((typeof options === "undefined" ? "undefined" : _typeof(options)) !== "object") {
+    console.error("Options should be a type of object. given : " + options);
+    return null;
+  }
 
-	// singleton feature
-	if (instance.options.singleton && instance.toasts.length > 0) {
-		instance.cached_options = options;
-		instance.toasts[instance.toasts.length - 1].goAway(0);
-	}
+  // singleton feature
+  if (instance.options.singleton && instance.toasts.length > 0) {
+    instance.cached_options = options;
+    instance.toasts[instance.toasts.length - 1].goAway(0);
+  }
 
-	// clone the global options
-	var _options = Object.assign({}, instance.options);
+  // clone the global options
+  var _options = Object.assign({}, instance.options);
 
-	// merge the cached global options with options
-	Object.assign(_options, options);
+  // merge the cached global options with options
+  Object.assign(_options, options);
 
-	toast = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__show__["a" /* default */])(instance, message, _options);
-	instance.toasts.push(toast);
+  toast = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__show__["a" /* default */])(instance, message, _options);
+  instance.toasts.push(toast);
 
-	return toast;
+  return toast;
 };
 
 /**
  * Register the Custom Toasts
  */
 var initiateCustomToasts = function initiateCustomToasts(instance) {
+  var customToasts = instance.options.globalToasts;
 
-	var customToasts = instance.options.globalToasts;
+  // this will initiate toast for the custom toast.
+  var initiate = function initiate(message, options) {
+    // check if passed option is a available method if so call it.
+    if (typeof options === "string" && instance[options]) {
+      return instance[options].apply(instance, [message, {}]);
+    }
 
-	// this will initiate toast for the custom toast.
-	var initiate = function initiate(message, options) {
+    // or else create a new toast with passed options.
+    return _show(instance, message, options);
+  };
 
-		// check if passed option is a available method if so call it.
-		if (typeof options === 'string' && instance[options]) {
-			return instance[options].apply(instance, [message, {}]);
-		}
+  if (customToasts) {
+    instance.global = {};
 
-		// or else create a new toast with passed options.
-		return _show(instance, message, options);
-	};
+    Object.keys(customToasts).forEach(function (key) {
+      // register the custom toast events to the Toast.custom property
+      instance.global[key] = function () {
+        var payload = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-	if (customToasts) {
-
-		instance.global = {};
-
-		Object.keys(customToasts).forEach(function (key) {
-
-			// register the custom toast events to the Toast.custom property
-			instance.global[key] = function () {
-				var payload = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-
-				//console.log(payload);
-				// return the it in order to expose the Toast methods
-				return customToasts[key].apply(null, [payload, initiate]);
-			};
-		});
-	}
+        //console.log(payload);
+        // return the it in order to expose the Toast methods
+        return customToasts[key].apply(null, [payload, initiate]);
+      };
+    });
+  }
 };
 
 var initiateToastContainer = function initiateToastContainer(instance) {
-	// create notification container
-	var container = document.createElement('div');
-	container.id = instance.id;
-	container.setAttribute('role', 'status');
-	container.setAttribute('aria-live', 'polite');
-	container.setAttribute('aria-atomic', 'false');
+  // create notification container
+  var container = document.createElement("div");
+  container.id = instance.id;
+  container.setAttribute("role", "status");
+  container.setAttribute("aria-live", "polite");
+  container.setAttribute("aria-atomic", "false");
 
-	document.body.appendChild(container);
-	instance.container = container;
+  document.body.appendChild(container);
+  instance.container = container;
 };
 
 var register = function register(instance, name, callback, options) {
+  !instance.options.globalToasts ? instance.options.globalToasts = {} : null;
 
-	!instance.options.globalToasts ? instance.options.globalToasts = {} : null;
+  instance.options.globalToasts[name] = function (payload, initiate) {
+    // if call back is string we will keep it that way..
+    var message = null;
 
-	instance.options.globalToasts[name] = function (payload, initiate) {
+    if (typeof callback === "string") {
+      message = callback;
+    }
 
-		// if call back is string we will keep it that way..
-		var message = null;
+    if (typeof callback === "function") {
+      message = callback(payload);
+    }
 
-		if (typeof callback === 'string') {
-			message = callback;
-		}
+    return initiate(message, options);
+  };
 
-		if (typeof callback === 'function') {
-			message = callback(payload);
-		}
-
-		return initiate(message, options);
-	};
-
-	initiateCustomToasts(instance);
+  initiateCustomToasts(instance);
 };
 
 /* unused harmony default export */ var _unused_webpack_default_export = ({ Toasted: Toasted });
@@ -1009,7 +1001,13 @@ var createAction = function createAction(action, toastObject) {
 		return null;
 	}
 
-	var el = document.createElement('a');
+	var el = void 0;
+	if (action.href) {
+		el = document.createElement('a');
+	} else {
+		el = document.createElement('button');
+	}
+
 	el.classList.add('action');
 	el.classList.add('ripple');
 
